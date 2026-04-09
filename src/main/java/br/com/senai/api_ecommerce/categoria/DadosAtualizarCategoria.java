@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 public record DadosAtualizarCategoria(
         long id,
 
-
         @Size(min = 3, max = 60)
         @Column(unique = true)
 
