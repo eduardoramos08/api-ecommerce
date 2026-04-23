@@ -1,17 +1,18 @@
 package br.com.senai.api_ecommerce.categoria;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
 @Table(name="categorias")
-@Entity(name = "Categoria")
+@Entity(name="Categoria")
 @Getter
 @NoArgsConstructor
-@EqualsAndHashCode(of = "id")
-
+@AllArgsConstructor
+@EqualsAndHashCode(of="id" )
 public class Categoria {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,12 +28,10 @@ public class Categoria {
     }
 
     public void atualizarCategoria(DadosAtualizarCategoria dados) {
-    if (dados.nome() != null && !dados.nome().isBlank() ) {
-        this.nome = dados.nome();
-    }
-    if (dados.descricao() != null) {
-        this.descricao = dados.descricao();
-      }
+        if(dados.nome() != null && !dados.nome().isBlank())
+            this.nome = dados.nome();
+        if(dados.descricao() != null)
+            this.descricao = dados.descricao();
     }
 
     public void excluirCategoria() {

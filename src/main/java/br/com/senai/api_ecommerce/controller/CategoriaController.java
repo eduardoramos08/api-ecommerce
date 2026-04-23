@@ -15,11 +15,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("categorias")
-
-
 public class CategoriaController {
 
-    @Autowired // indica para o SpringBoot que ele vai instanciar (criar) esse objeto
+    @Autowired
     private CategoriaRepository repository;
 
     @PostMapping
@@ -29,37 +27,30 @@ public class CategoriaController {
     }
 
     @GetMapping
-    public Page<DadosListagemCategoria> listarCategorias(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao) {
-        return repository.findAllByAtivoTrue(paginacao).map(DadosListagemCategoria::new);
+    public Page<DadosListagemCategoria> listarCategorias(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao){
+        return repository.findAllByAtivoTrue(paginacao)
+                .map(DadosListagemCategoria::new);
     }
 
-    //public List<DadosListagemCategoria> listarCategorias() {
-    //    return repository.findAll().stream().map(DadosListagemCategoria::new).toList();
-    //}
     @PutMapping
     @Transactional
-    public void atualizarCategoria( @RequestBody DadosAtualizarCategoria dados) {
-        var categoraia = repository.getReferenceById(dados.id());
-        categoraia.atualizarCategoria(dados);
+    public void atualizarCategoria(@RequestBody @Valid DadosAtualizarCategoria dados){
+        var categoria = repository.getReferenceById(dados.id());
+        categoria.atualizarCategoria(dados);
     }
 
-    //@DeleteMapping("/{id}")
-    //@Transactional
-    //public void deletarCategoria(@PathVariable Long id) {
-    //    repository.deleteById(id);
-    //}
     @DeleteMapping("/{id}")
     @Transactional
-    public void deletarCategoria(@PathVariable Long id) {
+    public void deletarCategoria(@PathVariable Long id){
         var categoria = repository.getReferenceById(id);
         categoria.excluirCategoria();
     }
+
     @GetMapping("/{id}")
     public DadosDetalhamentoCategoria detalharCategoria(@PathVariable Long id){
-        var categoria = repository.findByIdAndAtivoTrue(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não existe"));
-
+        var categoria = repository.findByIdAndAtivoTrue(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Categoria não existe."
+        ));
         return new DadosDetalhamentoCategoria(categoria);
     }
-
 }

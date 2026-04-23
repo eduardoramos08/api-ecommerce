@@ -10,7 +10,7 @@ public record DadosCadastroCategoria(
         @Column(unique = true)
         String nome,
 
-        @Size(max = 255)
+        @Size(max=255)
         String descricao
 ) {
 }
