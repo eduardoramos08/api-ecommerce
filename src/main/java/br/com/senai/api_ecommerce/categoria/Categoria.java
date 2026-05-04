@@ -1,6 +1,5 @@
 package br.com.senai.api_ecommerce.categoria;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -12,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of="id" )
+@EqualsAndHashCode(of="id")
 public class Categoria {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

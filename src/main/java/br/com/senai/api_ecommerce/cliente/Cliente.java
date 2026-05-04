@@ -1,23 +1,22 @@
 package br.com.senai.api_ecommerce.cliente;
 
-import br.com.senai.api_ecommerce.Endereco.Endereco;
+import br.com.senai.api_ecommerce.endereco.Endereco;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Table(name="clientes")
-@Entity(name="Cliente")
+@Table(name = "clientes")
+@Entity(name = "Cliente")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of="id" )
-
+@EqualsAndHashCode(of = "id")
 public class Cliente {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Long id;
     private String nome;
     private String email;
@@ -25,10 +24,10 @@ public class Cliente {
     private String telefone;
     private boolean ativo;
 
-    @Embedded // indica que os atributos da classe Endereco serão incorporados na tabela Cliente
+    @Embedded //configura a classe endereço como parte de cliente
     private Endereco endereco;
 
-    public Cliente(DadosCadastroCliente dados) {
+    public Cliente(DadosCadastroCliente dados){
         this.nome = dados.nome();
         this.email = dados.email();
         this.cpf = dados.cpf();
@@ -37,14 +36,18 @@ public class Cliente {
         this.endereco = new Endereco(dados.endereco());
     }
 
-    public void atualizarCliente(DadosAtualizarCliente dados) {
-        if(dados.nome() != null && !dados.nome().isBlank())
+    public void  atualizarCliente(DadosAtualizarCliente dados){
+        if(dados.nome() !=null && !dados.nome().isBlank())
             this.nome = dados.nome();
-        if(dados.email() != null && !dados.email().isBlank())
+        if(dados.email() !=null && !dados.email().isBlank())
             this.email = dados.email();
+        if(dados.telefone() !=null && !dados.telefone().isBlank())
+            this.telefone = dados.telefone();
+        if(dados.endereco() != null)
+            this.endereco.atualizarEndereco(dados.endereco());
     }
 
-    public void excluirCliente() {
+    public void excluirCliente(){
         this.ativo = false;
     }
 }

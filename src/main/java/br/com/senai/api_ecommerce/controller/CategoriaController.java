@@ -11,18 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("categorias")
 public class CategoriaController {
 
-    @Autowired
+    @Autowired //indica para o Springboot que ele vai instanciar(criar) esse objeto
     private CategoriaRepository repository;
 
     @PostMapping
     @Transactional
-    public void cadastrarCategoria(@RequestBody @Valid DadosCadastroCategoria dados) {
+    public void cadastrarCategoria(@RequestBody @Valid DadosCadastroCategoria dados){
         repository.save(new Categoria(dados));
     }
 
@@ -39,6 +37,12 @@ public class CategoriaController {
         categoria.atualizarCategoria(dados);
     }
 
+//    @DeleteMapping("/{id}")
+//    @Transactional
+//    public void deletarCategoria(@PathVariable Long id){
+//        repository.deleteById(id);
+//    }
+
     @DeleteMapping("/{id}")
     @Transactional
     public void deletarCategoria(@PathVariable Long id){
@@ -48,9 +52,11 @@ public class CategoriaController {
 
     @GetMapping("/{id}")
     public DadosDetalhamentoCategoria detalharCategoria(@PathVariable Long id){
-        var categoria = repository.findByIdAndAtivoTrue(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Categoria não existe."
-        ));
+        Categoria categoria = repository.findByIdAndAtivoTrue(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Categoria não existe"
+                ));
         return new DadosDetalhamentoCategoria(categoria);
     }
 }

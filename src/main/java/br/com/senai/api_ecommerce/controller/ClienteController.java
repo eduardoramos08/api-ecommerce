@@ -14,17 +14,18 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("clientes")
 public class ClienteController {
+
     @Autowired
     private ClienteRepository repository;
 
     @PostMapping
     @Transactional
-    public void cadastrarCliente(@RequestBody @Valid DadosCadastroCliente dados) {
+    public void cadastrarCliente(@RequestBody @Valid DadosCadastroCliente dados){
         repository.save(new Cliente(dados));
     }
 
     @GetMapping
-    public Page<DadosListagemCliente> listarClientes(@PageableDefault(size = 10, sort = {"nome"}) Pageable paginacao){
+    public Page<DadosListagemCliente> listarClientes(@PageableDefault(size=10, sort = {"nome"}) Pageable paginacao){
         return repository.findAllByAtivoTrue(paginacao)
                 .map(DadosListagemCliente::new);
     }
@@ -45,9 +46,11 @@ public class ClienteController {
 
     @GetMapping("/{id}")
     public DadosDetalhamentoCliente detalharCliente(@PathVariable Long id){
-        var cliente = repository.findByIdAndAtivoTrue(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Cliente não existe."
-        ));
+        Cliente cliente = repository.findByIdAndAtivoTrue(id)
+                .orElseThrow(()-> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Cliente não existe"
+                ));
         return new DadosDetalhamentoCliente(cliente);
     }
 }
