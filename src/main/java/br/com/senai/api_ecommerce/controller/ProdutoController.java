@@ -4,7 +4,6 @@ import br.com.senai.api_ecommerce.categoria.Categoria;
 import br.com.senai.api_ecommerce.categoria.CategoriaRepository;
 import br.com.senai.api_ecommerce.exceptions.ErroResponse;
 import br.com.senai.api_ecommerce.produto.*;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -35,107 +34,130 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("produtos")
 @Tag(name="Produtos",description="Gerenciamento dos produtos do ecommerce")
-@OpenAPIDefinition(tags ={
-        @Tag(name = "Criar Produto",description = "Criar"),
-        @Tag(name = "Listar todos os produtos",description = "Listar todos"),
-        @Tag(name = "Listar Produto por ID",description = "Listar por ID"),
-        @Tag(name = "Excluir Produto",description = "Excluir"),
-        @Tag(name = "Atualizar Produto",description = "Atualizar")
-})
-public class ProdutoController {
 
+public class ProdutoController {
     @Autowired
     private CategoriaRepository categoriaRepository;
-
     @Autowired
     private ProdutoRepository produtoRepository;
 
 
     @PostMapping
     @Transactional
-    @Operation(summary = "Criar um novo produto")
-    @Tag(name="Criar Produto", description = "Salva os dados do produto no BD")
+    @Operation(summary = "Criar um novo produto", description = "Salva os dados do produto no banco de dados"
+    )
     @ApiResponses( value = {
             @ApiResponse(responseCode = "201", description = "Produto criado com sucesso",
                     content = {
-                            @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = DadosDetalhamentoProduto.class))
-                    }),
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DadosDetalhamentoProduto.class
+                                    )
+                            )
+                    }
+            ),
+
             @ApiResponse(responseCode = "409", description = "SKU já cadastrado", content = @Content),
             @ApiResponse(responseCode = "404", description = "Categoria inválida", content = @Content)
     })
     public ResponseEntity<DadosDetalhamentoProduto> cadastrarProduto(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    content = @Content(
-                            mediaType = "application/json",
+                    content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = DadosCadastroProduto.class),
                             examples = @ExampleObject(
-                                    value = "{ \"nome\": \"Nome Produto\",\t\n" +
-                                            "\t\"preco\": 21.00,\n" +
-                                            "\t\"sku\":\"999999999\",\n" +
-                                            "\t\"descricao\": \"Descrição do produto\",\n" +
-                                            "\t\"estoque\": 1,\n" +
-                                            "\t\"categoriaId\": 6}"
+                                    value = "{ \"nome\": \"Nome Produto\",\n" +
+                                            "\"preco\": 21.00,\n" +
+                                            "\"sku\":\"999999999\",\n" +
+                                            "\"descricao\": \"Descrição do produto\",\n" +
+                                            "\"estoque\": 1,\n" +
+                                            "\"categoriaId\": 6}"
                             )
                     )
             )
             @RequestBody @Valid DadosCadastroProduto dados){
         //1. Verificar se a categoria existe
         var categoria = categoriaRepository.findByIdAndAtivoTrue(dados.categoriaId())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Categoria inválida"));
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria inválida"));
         //2. Verificar se SKU é único
         if(produtoRepository.existsBySkuAndAtivoTrue(dados.sku()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "SKU já cadastrado no sistema");
         //3. Criar o produto
         Produto produto = new Produto(dados, categoria);
         produtoRepository.save(produto);
-
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new DadosDetalhamentoProduto(produto));
     }
-
     @GetMapping
-    @Tag(name = "Listar todos os produtos")
-    public ResponseEntity<Page<DadosListagemProduto>> listarProdutos(@PageableDefault(size=10, sort={"nome"}) @ParameterObject Pageable paginacao){
+    @Operation(summary = "Listar todos os produtos", description = "Lista os produtos ativos presentes no banco de dados")
+    @ApiResponses( value = {
+            @ApiResponse(responseCode = "200", description = "Lista de produtos retornada com sucesso",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DadosListagemProduto.class)
+                            )
+                    }
+            ),
+            @ApiResponse(responseCode = "404", description = "Nenhum produto encontrado", content = @Content)
+    })
+
+    public ResponseEntity<Page<DadosListagemProduto>> listarProdutos(
+            @PageableDefault(size=10, sort={"nome"})
+            @ParameterObject Pageable paginacao){
         var page = produtoRepository.findAllByAtivoTrue(paginacao)
                 .map(DadosListagemProduto::new);
-
         return ResponseEntity.ok(page);
     }
 
     @GetMapping("/{id}")
-    @Tag(name = "Listar Produto por ID")
-    public ResponseEntity<DadosDetalhamentoProduto> buscarProdutoPorId(@PathVariable Long id){
+    @Operation(summary = "Buscar produto por ID", description = "Busca os detalhes de um produto específico"
+    )
+    @ApiResponses( value = {
+            @ApiResponse(responseCode = "200", description = "Produto encontrado", content = {
+                            @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = DadosDetalhamentoProduto.class)
+                            )
+                    }
+            ),
+            @ApiResponse(responseCode = "404", description = "Produto não encontrado", content = @Content)
+    })
+    public ResponseEntity<DadosDetalhamentoProduto> buscarProdutoPorId(
+            @PathVariable Long id){
         var produto = produtoRepository.findByIdAndAtivoTrue(id)
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
         return ResponseEntity.ok(new DadosDetalhamentoProduto(produto));
     }
 
     @DeleteMapping("/{id}")
     @Transactional
-    @Tag(name = "Excluir Produto")
+    @Operation(summary = "Excluir produto", description = "Remove um produto do sistema pelo ID"
+    )
+    @ApiResponses( value = {
+            @ApiResponse(responseCode = "204", description = "Produto excluído com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Produto não encontrado", content = @Content)
+    })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity excluirProduto(@PathVariable Long id){
         var produto = produtoRepository.findByIdAndAtivoTrue(id)
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+                .orElseThrow(() ->new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
         produto.excluirProduto();
-
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping
     @Transactional
-    @Tag(name = "Atualizar Produto")
+    @Operation(summary = "Atualizar produto", description = "Atualiza os dados de um produto existente")
     @ApiResponses( value = {
             @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso",
                     content = {
                             @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = DadosDetalhamentoProduto.class))
-                    }),
+                                    schema = @Schema(implementation = DadosDetalhamentoProduto.class)
+                            )
+                    }
+            ),
             @ApiResponse(responseCode = "409", description = "SKU já cadastrado", content = @Content),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Recurso não encontrado",
+            @ApiResponse(responseCode = "404", description = "Recurso não encontrado",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ErroResponse.class),
@@ -156,12 +178,33 @@ public class ProdutoController {
                     )
             )
     })
+
     public ResponseEntity<DadosDetalhamentoProduto> atualizarProduto(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = DadosAtualizarProduto.class),
+                            examples = @ExampleObject(
+                                    value = """
+                {
+                  "id": 1,
+                  "nome": "Notebook Gamer",
+                  "preco": 4500.00,
+                  "sku": "ABC12345",
+                  "descricao": "Notebook atualizado",
+                  "estoque": 10,
+                  "categoriaId": 2
+                }
+                """
+                            )
+                    )
+            )
+
             @RequestBody @Valid DadosAtualizarProduto dados
     ){
+
         //1. Verificar se o produto existe
         var produto = produtoRepository.findByIdAndAtivoTrue(dados.id())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
 
         //2. Verificar se a categoria existe
         Categoria categoria = null;
@@ -174,9 +217,7 @@ public class ProdutoController {
             if (produtoRepository.existsBySkuAndAtivoTrue(dados.sku()))
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "SKU já cadastrado no sistema");
         }
-
         produto.atualizarProduto(dados, categoria);
-
         return ResponseEntity.ok(new DadosDetalhamentoProduto(produto));
     }
 }
